@@ -1,54 +1,47 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-import joblib
-import numpy as np
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List
 
-app = FastAPI(title="Heart Disease Prediction API")
+# ----- FASTAPI APP -----
+app = FastAPI()
 
-# Allow requests from any origin (for development)
+# ----- CORS CONFIG -----
+origins = [
+    "https://ml-frontend-c716.vercel.app",  # your Vercel frontend
+    "http://localhost:3000",                 # for local testing
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all origins
+    allow_origins=origins,  # allow requests from frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load models and scaler
-logistic_model = joblib.load("logistic_model.joblib")          # Logistic Regression model
-decision_tree_model = joblib.load("decision_tree_model.joblib")  # Decision Tree model
-scaler = joblib.load("scaler.joblib")                          # Scaler
-
+# ----- REQUEST BODY MODEL -----
 class PredictRequest(BaseModel):
-    model: str             # "Logistic Regression" or "Decision Tree"
-    features: str          # comma-separated features as string
+    features: List[float]  # list of numbers from input
+    model: str             # selected model name
 
-@app.get("/")
-def home():
-    return {"message": "API is running"}
+# ----- MOCK MODELS (replace with real ML model later) -----
+def logistic_regression_predict(features):
+    # Just a dummy prediction logic
+    return 1 if sum(features) > 1000 else 0
 
+def decision_tree_predict(features):
+    # Just a dummy prediction logic
+    return 1 if features[0] > 50 else 0
+
+# ----- PREDICTION ENDPOINT -----
 @app.post("/predict")
 def predict(data: PredictRequest):
-    try:
-        # Normalize and convert features to float array
-        features = np.array([float(x.strip()) for x in data.features.split(",")]).reshape(1, -1)
-        features = scaler.transform(features)
-    except Exception as e:
-        return {"error": f"Invalid input: {str(e)}"}
-
-    try:
-        # Normalize model name
-        model_name = data.model.strip().lower()
-
-        if model_name in ["logistic regression", "logistic"]:
-            prediction = logistic_model.predict(features)[0]
-        elif model_name in ["decision tree", "tree"]:
-            prediction = decision_tree_model.predict(features)[0]
-        else:
-            return {"error": "Invalid model. Choose 'Logistic Regression' or 'Decision Tree'."}
-
-        return {"prediction": int(prediction)}
-
-    except Exception as e:
-        return {"error": f"Prediction failed: {str(e)}"}
+    if data.model == "Logistic Regression":
+        prediction = logistic_regression_predict(data.features)
+    elif data.model == "Decision Tree":
+        prediction = decision_tree_predict(data.features)
+    else:
+        return {"error": "Unknown model"}
+    
+    return {"prediction": prediction}
