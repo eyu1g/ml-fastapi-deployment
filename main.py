@@ -14,7 +14,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # allow requests from frontend
+    allow_origins=["https://ml-frontend-git-main-eyu1gs-projects.vercel.app"],  # allow requests from frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
