@@ -3,44 +3,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 
-# ----- FASTAPI APP -----
 app = FastAPI(title="Heart Disease Prediction API")
 
-# ----- CORS CONFIG -----
-origins = [
-    "https://ml-frontend-git-main-eyu1gs-projects.vercel.app",  # your deployed frontend
-    "http://localhost:3000",                 # for local testing
-]
-
+# ✅ CORRECT CORS CONFIG
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ml-frontend-git-main-eyu1gs-projects.vercel.app"],  # allow requests from frontend
-    allow_credentials=True,
+    allow_origins=[
+        "https://ml-frontend-c716.vercel.app",  # ✅ YOUR REAL FRONTEND
+        "http://localhost:3000"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ----- REQUEST BODY MODEL -----
 class PredictRequest(BaseModel):
-    features: List[float]  # list of numbers from frontend
-    model: str             # model selected by user
+    features: List[float]
+    model: str
 
-# ----- MOCK MODELS (replace with real ML model later) -----
 def logistic_regression_predict(features: List[float]) -> int:
-    """
-    Dummy logistic regression prediction:
-    If sum of features > 1000, predict 1 (Heart Disease), else 0 (Healthy)
-    """
     return 1 if sum(features) > 1000 else 0
 
 def decision_tree_predict(features: List[float]) -> int:
-    """
-    Dummy decision tree prediction:
-    If first feature (age) > 50, predict 1 (Heart Disease), else 0
-    """
     return 1 if features[0] > 50 else 0
 
-# ----- PREDICTION ENDPOINT -----
 @app.post("/predict")
 def predict(data: PredictRequest):
     if data.model == "Logistic Regression":
